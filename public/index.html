@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE Health — Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17; --bg-card: #111827; --bg-card-hover: #1a2235; --bg-surface: #0f1520;
+    --border: #1e293b; --border-hover: #334155;
+    --text: #e2e8f0; --text-dim: #94a3b8; --text-muted: #64748b;
+    --accent: #3b82f6; --accent-glow: rgba(59,130,246,0.15); --accent-hover: #60a5fa;
+    --success: #10b981; --success-bg: rgba(16,185,129,0.1);
+    --warning: #f59e0b; --warning-bg: rgba(245,158,11,0.1);
+    --danger: #ef4444; --danger-bg: rgba(239,68,68,0.1);
+    --purple: #8b5cf6; --purple-bg: rgba(139,92,246,0.1);
+    --forge-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  .app { display:flex; height:100vh; }
+  
+  /* Sidebar */
+  .sidebar { width:250px; background:var(--bg-surface); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+  .sidebar-brand { padding:20px 18px; border-bottom:1px solid var(--border); }
+  .sidebar-brand h1 { font-family:'Space Grotesk',sans-serif; font-size:1.2rem; font-weight:700; background:var(--forge-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .sidebar-brand span { font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; display:block; margin-top:2px; }
+  .sidebar-nav { padding:10px 8px; flex:1; overflow-y:auto; }
+  .nav-section { font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; padding:14px 10px 4px; }
+  .nav-item { display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:var(--radius-sm); cursor:pointer; color:var(--text-dim); font-size:0.82rem; transition:all 0.15s; }
+  .nav-item:hover { background:var(--bg-card); color:var(--text); }
+  .nav-item.active { background:var(--accent-glow); color:var(--accent); font-weight:500; }
+  .nav-item .icon { font-size:0.95rem; width:20px; text-align:center; }
+  .nav-badge { margin-left:auto; background:var(--accent); color:white; font-size:0.6rem; padding:2px 7px; border-radius:10px; font-weight:600; }
+  .sidebar-footer { padding:14px 18px; border-top:1px solid var(--border); }
+  .mira-status { display:flex; align-items:center; gap:10px; }
+  .mira-avatar { width:34px; height:34px; background:var(--forge-gradient); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; }
+  .mira-info h3 { font-size:0.82rem; font-weight:600; }
+  .mira-info p { font-size:0.68rem; color:var(--success); display:flex; align-items:center; gap:4px; }
+  .mira-info p::before { content:''; width:6px; height:6px; background:var(--success); border-radius:50%; }
+
+  /* Main */
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .header-left h2 { font-family:'Space Grotesk',sans-serif; font-size:1.3rem; font-weight:600; }
+  .header-left p { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+  .header-right { display:flex; gap:10px; }
+  .btn { background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); padding:7px 14px; border-radius:var(--radius-sm); font-size:0.78rem; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+  .btn:hover { border-color:var(--border-hover); color:var(--text); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:white; }
+  .btn.primary:hover { background:var(--accent-hover); }
+
+  .content { flex:1; overflow-y:auto; padding:20px 24px; }
+
+  /* Stats */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+  .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; transition:all 0.2s; }
+  .stat-card:hover { border-color:var(--border-hover); }
+  .stat-label { font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+  .stat-value { font-family:'Space Grotesk',sans-serif; font-size:1.7rem; font-weight:700; }
+  .stat-sub { font-size:0.68rem; color:var(--success); margin-top:3px; }
+
+  /* Kanban */
+  .kanban { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+  .kanban-col { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; min-height:250px; }
+  .kanban-header { padding:12px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .kanban-title { font-size:0.78rem; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .kanban-count { font-size:0.6rem; background:var(--bg-card); color:var(--text-muted); padding:2px 7px; border-radius:10px; }
+  .kanban-cards { padding:8px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
+  .k-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; cursor:pointer; transition:all 0.15s; position:relative; }
+  .k-card:hover { border-color:var(--border-hover); background:var(--bg-card-hover); }
+  .k-card.urgent { border-left:3px solid var(--danger); }
+  .k-card.high { border-left:3px solid var(--warning); }
+  .k-card-title { font-size:0.78rem; font-weight:500; margin-bottom:5px; line-height:1.3; }
+  .k-card-meta { display:flex; gap:5px; flex-wrap:wrap; }
+  .k-tag { font-size:0.6rem; padding:2px 7px; border-radius:4px; font-weight:500; }
+  .k-tag.cio { background:var(--accent-glow); color:var(--accent); }
+  .k-tag.lumen,.k-tag.sdk { background:var(--purple-bg); color:var(--purple); }
+  .k-tag.strategy,.k-tag.gtm,.k-tag.brand { background:var(--warning-bg); color:var(--warning); }
+  .k-tag.outreach,.k-tag.ops { background:var(--success-bg); color:var(--success); }
+  .k-tag.urgent,.k-tag.priority { background:var(--danger-bg); color:var(--danger); }
+  .k-tag.infra,.k-tag.product { background:var(--purple-bg); color:var(--purple); }
+  .k-card-date { font-size:0.6rem; color:var(--text-muted); margin-top:6px; }
+
+  /* Bottom Grid */
+  .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); }
+  .panel-header { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .panel-header h3 { font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .panel-body { padding:12px 16px; max-height:350px; overflow-y:auto; }
+
+  .activity-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+  .activity-item:last-child { border-bottom:none; }
+  .activity-icon { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; flex-shrink:0; background:var(--bg-surface); }
+  .activity-text { font-size:0.78rem; line-height:1.4; }
+  .activity-text strong { font-weight:600; }
+  .activity-time { font-size:0.62rem; color:var(--text-muted); margin-top:1px; }
+
+  .cio-item { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); }
+  .cio-item:last-child { border-bottom:none; }
+  .cio-info h4 { font-size:0.8rem; font-weight:500; }
+  .cio-info p { font-size:0.68rem; color:var(--text-muted); }
+  .cio-status { font-size:0.62rem; padding:3px 9px; border-radius:4px; font-weight:500; }
+  .cio-status.prospect { background:var(--accent-glow); color:var(--accent); }
+  .cio-status.researching,.cio-status.contacted { background:var(--warning-bg); color:var(--warning); }
+  .cio-status.meeting,.cio-status.proposal { background:var(--success-bg); color:var(--success); }
+  .cio-status.nurture { background:var(--purple-bg); color:var(--purple); }
+  .cio-status.won { background:var(--success-bg); color:var(--success); }
+
+  /* Modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); width:480px; max-width:90vw; max-height:80vh; overflow-y:auto; }
+  .modal-head { padding:18px 20px; border-bottom:1px solid var(--border); font-weight:600; font-size:0.95rem; display:flex; justify-content:space-between; align-items:center; }
+  .modal-close { cursor:pointer; font-size:1.2rem; color:var(--text-muted); background:none; border:none; }
+  .modal-body { padding:18px 20px; }
+  .modal-body label { display:block; font-size:0.75rem; color:var(--text-dim); margin-bottom:4px; margin-top:12px; }
+  .modal-body label:first-child { margin-top:0; }
+  .modal-body input,.modal-body select,.modal-body textarea { width:100%; background:var(--bg-surface); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:var(--radius-sm); font-family:inherit; font-size:0.82rem; }
+  .modal-body textarea { min-height:80px; resize:vertical; }
+  .modal-body input:focus,.modal-body select:focus,.modal-body textarea:focus { outline:none; border-color:var(--accent); }
+  .modal-foot { padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+
+  /* Chat Panel */
+  .chat-toggle { position:fixed; bottom:24px; right:24px; width:56px; height:56px; background:var(--forge-gradient); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.4rem; box-shadow:0 4px 20px rgba(59,130,246,0.3); z-index:50; transition:transform 0.2s; }
+  .chat-toggle:hover { transform:scale(1.08); }
+  .chat-panel { display:none; position:fixed; bottom:90px; right:24px; width:400px; height:550px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; z-index:50; box-shadow:0 8px 40px rgba(0,0,0,0.4); flex-direction:column; }
+  .chat-panel.show { display:flex; }
+  .chat-panel-head { padding:14px 16px; background:var(--bg-surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .chat-panel-head h4 { font-size:0.85rem; display:flex; align-items:center; gap:8px; }
+  .chat-panel iframe { flex:1; border:none; width:100%; }
+
+  @media (max-width:1200px) {
+    .kanban { grid-template-columns:repeat(2,1fr); }
+    .stats-row { grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:768px) {
+    .sidebar { display:none; }
+    .kanban { grid-template-columns:1fr; }
+    .stats-row { grid-template-columns:1fr 1fr; }
+    .bottom-grid { grid-template-columns:1fr; }
+    .chat-panel { width:calc(100vw - 32px); right:16px; bottom:80px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <h1>⚡ FORGE HEALTH</h1>
+      <span>Command Center</span>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="showPage('pipeline',this)"><span class="icon">🎯</span> CIO Pipeline <span class="nav-badge" id="cio-badge">0</span></div>
+      <div class="nav-section">Intelligence</div>
+      <div class="nav-item" onclick="showPage('briefing',this)"><span class="icon">📰</span> Daily Briefing</div>
+      <div class="nav-item" onclick="showPage('leads',this)"><span class="icon">🔥</span> Leads <span class="nav-badge" id="leads-badge">0</span></div>
+      <div class="nav-section">Products</div>
+      <div class="nav-item" onclick="showPage('lumen',this)"><span class="icon">💡</span> Lumen App</div>
+      <div class="nav-item" onclick="showPage('sdk',this)"><span class="icon">🔧</span> Lumen SDK</div>
+      <div class="nav-section">Go-To-Market</div>
+      <div class="nav-item" onclick="showPage('conferences',this)"><span class="icon">🎤</span> Conferences</div>
+      <div class="nav-item" onclick="showPage('content',this)"><span class="icon">✍️</span> Content</div>
+      <div class="nav-section">Operations</div>
+      <div class="nav-item" onclick="showPage('notes',this)"><span class="icon">📝</span> Notes</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="mira-status">
+        <div class="mira-avatar">🔮</div>
+        <div class="mira-info"><h3>Mira</h3><p>Online</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div class="header-left">
+        <h2 id="page-title">Dashboard</h2>
+        <p id="page-sub"></p>
+      </div>
+      <div class="header-right">
+        <button class="btn" onclick="toggleChat()">💬 Mira</button>
+        <button class="btn primary" onclick="openNewTask()">+ New Task</button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- Chat FAB -->
+<div class="chat-toggle" onclick="toggleChat()">🔮</div>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-head">
+    <h4>🔮 Chat with Mira</h4>
+    <button class="modal-close" onclick="toggleChat()">✕</button>
+  </div>
+  <iframe id="chatFrame" src="about:blank"></iframe>
+</div>
+
+<!-- New Task Modal -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-head">New Task <button class="modal-close" onclick="closeModal('taskModal')">✕</button></div>
+    <div class="modal-body">
+      <label>Title</label>
+      <input id="taskTitle" placeholder="What needs to be done?">
+      <label>Description</label>
+      <textarea id="taskDesc" placeholder="Optional details..."></textarea>
+      <label>Status</label>
+      <select id="taskStatus">
+        <option value="todo">To Do</option>
+        <option value="in_progress">In Progress</option>
+        <option value="backlog">Ideas / Backlog</option>
+      </select>
+      <label>Priority</label>
+      <select id="taskPriority">
+        <option value="normal">Normal</option>
+        <option value="high">High</option>
+        <option value="urgent">Urgent</option>
+        <option value="low">Low</option>
+      </select>
+      <label>Tags (comma-separated)</label>
+      <input id="taskTags" placeholder="e.g. CIO Target, Strategy">
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('taskModal')">Cancel</button>
+      <button class="btn primary" onclick="saveTask()">Create Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Lead Modal -->
+<div class="modal-overlay" id="leadModal">
+  <div class="modal">
+    <div class="modal-head">Capture Lead <button class="modal-close" onclick="closeModal('leadModal')">✕</button></div>
+    <div class="modal-body">
+      <label>Name *</label>
+      <input id="leadName" placeholder="Jane Smith">
+      <label>Title</label>
+      <input id="leadTitle" placeholder="CIO, VP Digital, etc.">
+      <label>Organization *</label>
+      <input id="leadOrg" placeholder="Hospital / Health System">
+      <label>Email</label>
+      <input id="leadEmail" placeholder="jane@hospital.ca">
+      <label>Phone</label>
+      <input id="leadPhone" placeholder="+1 416 555 1234">
+      <label>Interest Level</label>
+      <select id="leadInterest">
+        <option value="Hot">🔥 Hot</option>
+        <option value="Warm" selected>☀️ Warm</option>
+        <option value="Cool">❄️ Cool</option>
+      </select>
+      <label>Event / Source</label>
+      <input id="leadSource" placeholder="e-Health 2026, HIMSS, etc.">
+      <label>Notes</label>
+      <textarea id="leadNotes" placeholder="Key takeaways, follow-up items..."></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('leadModal')">Cancel</button>
+      <button class="btn primary" onclick="saveLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let chatOpen = false;
+
+// ── Data ──
+async function api(path, opts) {
+  const r = await fetch(API + path, { headers:{'Content-Type':'application/json'}, ...opts });
+  return r.json();
+}
+
+// ── Pages ──
+function showPage(page, el) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(page==='dashboard') loadDashboard();
+  else if(page==='pipeline') loadPipeline();
+  else if(page==='briefing') loadBriefing();
+  else if(page==='leads') loadLeads();
+  else { document.getElementById('page-title').textContent=page; document.getElementById('content').innerHTML='<p style="color:var(--text-muted);padding:40px;">Coming soon...</p>'; }
+}
+
+async function loadDashboard() {
+  document.getElementById('page-title').textContent = 'Dashboard';
+  const now = new Date();
+  document.getElementById('page-sub').textContent = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' — Let\'s build something great.';
+  
+  const [stats, tasks, activity, cios] = await Promise.all([
+    api('/api/stats'), api('/api/tasks'), api('/api/activity?limit=8'), api('/api/cio')
+  ]);
+  
+  const confDate = new Date('2026-05-31');
+  const daysToConf = Math.ceil((confDate - now)/(1000*60*60*24));
+  document.getElementById('cio-badge').textContent = stats.totalCIOs;
+
+  const tasksByStatus = {todo:[],in_progress:[],done:[],backlog:[]};
+  tasks.forEach(t => { if(tasksByStatus[t.status]) tasksByStatus[t.status].push(t); });
+
+  document.getElementById('content').innerHTML = `
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Target CIOs</div><div class="stat-value" style="color:var(--accent)">${stats.totalCIOs}</div><div class="stat-sub">${stats.activeOutreach} in active outreach</div></div>
+      <div class="stat-card"><div class="stat-label">Active Tasks</div><div class="stat-value" style="color:var(--warning)">${(stats.tasks.todo||0)+(stats.tasks.in_progress||0)}</div><div class="stat-sub">${stats.tasks.in_progress||0} in progress</div></div>
+      <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value" style="color:var(--success)">${stats.tasks.done||0}</div><div class="stat-sub">Tasks done</div></div>
+      <div class="stat-card"><div class="stat-label">e-Health 2026</div><div class="stat-value" style="color:var(--purple)">${daysToConf}</div><div class="stat-sub">days · Toronto · May 31</div></div>
+    </div>
+    <div class="kanban">
+      ${renderKanbanCol('📋 To Do','todo',tasksByStatus.todo)}
+      ${renderKanbanCol('⚡ In Progress','in_progress',tasksByStatus.in_progress)}
+      ${renderKanbanCol('✅ Done','done',tasksByStatus.done)}
+      ${renderKanbanCol('💡 Ideas','backlog',tasksByStatus.backlog)}
+    </div>
+    <div class="bottom-grid">
+      <div class="panel">
+        <div class="panel-header"><h3>📡 Recent Activity</h3></div>
+        <div class="panel-body">${activity.map(a => `
+          <div class="activity-item">
+            <div class="activity-icon">${a.icon}</div>
+            <div><div class="activity-text"><strong>${esc(a.title)}</strong>${a.description?' — '+esc(a.description):''}</div><div class="activity-time">${fmtDate(a.created_at)}</div></div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3>🎯 CIO Pipeline</h3></div>
+        <div class="panel-body">${cios.slice(0,6).map(c => `
+          <div class="cio-item">
+            <div class="cio-info"><h4>${esc(c.organization)}</h4><p>${esc(c.location)}</p></div>
+            <span class="cio-status ${c.status}">${c.status}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderKanbanCol(title, status, cards) {
+  return `<div class="kanban-col">
+    <div class="kanban-header"><div class="kanban-title">${title} <span class="kanban-count">${cards.length}</span></div></div>
+    <div class="kanban-cards" data-status="${status}" ondrop="dropCard(event)" ondragover="event.preventDefault()">
+      ${cards.map(c => {
+        const tags = JSON.parse(c.tags||'[]');
+        return `<div class="k-card ${c.priority}" draggable="true" ondragstart="dragCard(event,${c.id})" data-id="${c.id}">
+          <div class="k-card-title">${esc(c.title)}</div>
+          <div class="k-card-meta">${tags.map(t=>`<span class="k-tag ${t.toLowerCase().replace(/[^a-z]/g,'')}">${esc(t)}</span>`).join('')}</div>
+          <div class="k-card-date">${fmtDate(c.created_at)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+// ── Drag & Drop ──
+let draggedId = null;
+function dragCard(e, id) { draggedId = id; e.dataTransfer.effectAllowed = 'move'; }
+async function dropCard(e) {
+  e.preventDefault();
+  if(!draggedId) return;
+  const newStatus = e.currentTarget.dataset.status;
+  await api(`/api/tasks/${draggedId}`, { method:'PUT', body:JSON.stringify({status:newStatus}) });
+  draggedId = null;
+  loadDashboard();
+}
+
+// ── Pipeline Page ──
+async function loadPipeline() {
+  document.getElementById('page-title').textContent = 'CIO Pipeline';
+  document.getElementById('page-sub').textContent = 'Track and manage hospital CIO relationships';
+  const cios = await api('/api/cio');
+  const statuses = ['prospect','researching','contacted','meeting','proposal','nurture','won'];
+  document.getElementById('content').innerHTML = `
+    <div style="margin-bottom:16px"><button class="btn primary" onclick="openNewCIO()">+ Add CIO Target</button></div>
+    <div class="panel"><div class="panel-body" style="max-height:none">
+      ${cios.map(c => `
+        <div class="cio-item" style="padding:14px 0;cursor:pointer" onclick="editCIO(${c.id})">
+          <div class="cio-info" style="flex:1">
+            <h4 style="font-size:0.88rem">${esc(c.organization)}</h4>
+            <p>${esc(c.name!=='TBD'?c.name+' · ':'')}${esc(c.location)}${c.notes?' · '+esc(c.notes.substring(0,60)):''}</p>
+          </div>
+          <span class="cio-status ${c.status}">${c.status}</span>
+        </div>`).join('')}
+    </div></div>`;
+}
+
+// ── Modals ──
+function openNewTask() { document.getElementById('taskModal').classList.add('show'); document.getElementById('taskTitle').focus(); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+async function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  if(!title) return;
+  const tags = document.getElementById('taskTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  await api('/api/tasks', { method:'POST', body:JSON.stringify({
+    title, description:document.getElementById('taskDesc').value,
+    status:document.getElementById('taskStatus').value,
+    priority:document.getElementById('taskPriority').value, tags
+  })});
+  closeModal('taskModal');
+  document.getElementById('taskTitle').value='';
+  document.getElementById('taskDesc').value='';
+  document.getElementById('taskTags').value='';
+  loadDashboard();
+}
+
+// ── Chat ──
+function toggleChat() {
+  chatOpen = !chatOpen;
+  const panel = document.getElementById('chatPanel');
+  panel.classList.toggle('show', chatOpen);
+  if(chatOpen && document.getElementById('chatFrame').src === 'about:blank') {
+    document.getElementById('chatFrame').src = 'https://app.heymira.app/?token=88a82af55b41cdc3372ba46ef93ed4f2ebf366637444932c';
+  }
+}
+
+// ── Briefing Page ──
+let briefingDates = [];
+let briefingIdx = 0;
+
+async function loadBriefing() {
+  document.getElementById('page-title').textContent = 'Daily Briefing';
+  document.getElementById('page-sub').textContent = 'AI-curated intelligence for healthcare strategy';
+  briefingDates = await api('/api/briefing/dates');
+  if(!briefingDates.length) {
+    document.getElementById('content').innerHTML = '<p style="color:var(--text-muted);padding:40px;text-align:center;">No briefings yet. Check back tomorrow morning.</p>';
+    return;
+  }
+  briefingIdx = 0;
+  renderBriefingDay();
+}
+
+async function renderBriefingDay() {
+  const dateStr = briefingDates[briefingIdx];
+  const data = await api('/api/briefing/' + dateStr);
+  const fd = new Date(dateStr+'T12:00:00');
+  const dayName = fd.toLocaleDateString('en-US',{weekday:'long'});
+  const fullDate = fd.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  let html = `<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+    <button class="btn" onclick="navBriefing(1)" ${briefingIdx>=briefingDates.length-1?'disabled style="opacity:0.3"':''}>← Older</button>
+    <div style="flex:1;text-align:center;">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;">${fullDate}</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);">${dayName} · Briefing #${briefingDates.length - briefingIdx}</div>
+    </div>
+    <button class="btn" onclick="navBriefing(-1)" ${briefingIdx<=0?'disabled style="opacity:0.3"':''}>Newer →</button>
+  </div>`;
+
+  // Quote
+  if(data.quote) {
+    html += `<div class="panel" style="margin-bottom:14px;border-left:3px solid var(--success);">
+      <div class="panel-body">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-style:italic;line-height:1.5;">"${esc(data.quote.text)}"</div>
+        <div style="color:var(--success);margin-top:8px;font-size:0.82rem;">— ${esc(data.quote.author)}</div>
+        ${data.quote.reflection?`<div style="color:var(--text-dim);font-size:0.82rem;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">${esc(data.quote.reflection)}</div>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Idea of the Day
+  if(data.idea) {
+    const i = data.idea;
+    const vc = i.verdict==='build'?'success':i.verdict==='watch'?'warning':'danger';
+    html += `<div class="panel" style="margin-bottom:14px;border-left:3px solid var(--warning);">
+      <div class="panel-header"><h3>💡 Idea of the Day</h3></div>
+      <div class="panel-body">
+        <div style="font-size:1rem;font-weight:600;margin-bottom:4px;">${esc(i.title)}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">${esc(i.source)}</div>
+        <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.6;">${esc(i.summary)}</div>
+        ${i.scores?`<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">${Object.entries(i.scores).map(([k,v])=>`<span style="background:var(--bg-surface);padding:4px 10px;border-radius:8px;font-size:0.72rem;"><span style="color:var(--warning);font-weight:600;">${v}</span><span style="color:var(--text-muted);">/10 ${k}</span></span>`).join('')}</div>`:''}
+        ${i.revenueEstimate?`<div style="display:inline-flex;align-items:center;gap:4px;background:var(--success-bg);border:1px solid rgba(16,185,129,0.2);padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:600;color:var(--success);margin-top:8px;">💰 ${esc(i.revenueEstimate)}</div>`:''}
+        <div style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:0.78rem;font-weight:600;margin-top:8px;background:var(--${vc}-bg);color:var(--${vc});">${esc(i.verdictNote||i.verdict)}</div>
+        ${i.healthcareAngle?`<div style="background:var(--accent-glow);border:1px solid rgba(59,130,246,0.15);border-radius:var(--radius-sm);padding:12px;margin-top:12px;"><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent);font-weight:600;margin-bottom:4px;">⚕️ Healthcare Angle</div><p style="font-size:0.82rem;color:var(--text-dim);line-height:1.5;">${esc(i.healthcareAngle)}</p></div>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Articles
+  if(data.articles && data.articles.length) {
+    html += `<div class="panel" style="margin-bottom:14px;">
+      <div class="panel-header"><h3>📰 Articles</h3></div>
+      <div class="panel-body" style="max-height:none;">`;
+    data.articles.forEach(a => {
+      html += `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+        <a href="${esc(a.url)}" target="_blank" style="font-size:0.92rem;font-weight:600;color:var(--text);text-decoration:none;">${esc(a.title)}</a>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">${esc(a.source)} · ${esc(a.date)}</div>
+        <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.5;margin-top:8px;">${esc(a.takeaway)}</div>
+        ${a.linkedinAngle?`<div style="background:var(--purple-bg);border:1px solid rgba(139,92,246,0.15);border-radius:var(--radius-sm);padding:10px;margin-top:10px;"><div style="font-size:0.7rem;color:var(--purple);font-weight:600;margin-bottom:4px;">💼 LinkedIn Angle</div><div style="font-size:0.78rem;color:var(--text-dim);">${esc(a.linkedinAngle)}</div></div>`:''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Events
+  if(data.events && data.events.length) {
+    html += `<div class="panel" style="margin-bottom:14px;">
+      <div class="panel-header"><h3>📅 Events & Webinars</h3></div>
+      <div class="panel-body" style="max-height:none;">`;
+    data.events.forEach(e => {
+      html += `<div style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="font-weight:600;font-size:0.88rem;">${esc(e.name)}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">📍 ${esc(e.location||'Virtual')} · 🗓️ ${esc(e.date)}</div>
+        ${e.description?`<div style="font-size:0.82rem;color:var(--text-dim);margin-top:6px;">${esc(e.description)}</div>`:''}
+        ${e.url?`<a href="${esc(e.url)}" target="_blank" class="btn" style="display:inline-block;margin-top:8px;font-size:0.72rem;text-decoration:none;">🎟️ Register</a>`:''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Videos
+  if(data.videos && data.videos.length) {
+    html += `<div class="panel" style="margin-bottom:14px;">
+      <div class="panel-header"><h3>🎬 Watch</h3></div>
+      <div class="panel-body" style="max-height:none;">`;
+    data.videos.forEach(v => {
+      html += `<div style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <a href="${esc(v.url)}" target="_blank" style="font-weight:600;font-size:0.88rem;color:var(--text);text-decoration:none;">${esc(v.title)}</a>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">${esc(v.source||'')} · ${esc(v.duration||'')}</div>
+        ${v.description?`<div style="font-size:0.82rem;color:var(--text-dim);margin-top:6px;">${esc(v.description)}</div>`:''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // LinkedIn
+  if(data.linkedin && data.linkedin.length) {
+    html += `<div class="panel" style="margin-bottom:14px;">
+      <div class="panel-header"><h3>💼 LinkedIn Pulse</h3></div>
+      <div class="panel-body" style="max-height:none;">`;
+    data.linkedin.forEach(l => {
+      html += `<div style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="font-weight:600;font-size:0.88rem;">${esc(l.author)}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);">${esc(l.authorTitle||'')}</div>
+        <div style="font-size:0.82rem;color:var(--text-dim);margin-top:6px;line-height:1.5;">${esc(l.insight)}</div>
+        ${l.url?`<a href="${esc(l.url)}" target="_blank" class="btn" style="display:inline-block;margin-top:8px;font-size:0.72rem;text-decoration:none;">🔗 View Post</a>`:''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+
+function navBriefing(dir) {
+  briefingIdx += dir;
+  if(briefingIdx < 0) briefingIdx = 0;
+  if(briefingIdx >= briefingDates.length) briefingIdx = briefingDates.length - 1;
+  renderBriefingDay();
+  document.querySelector('.content').scrollTop = 0;
+}
+
+// ── Leads Page ──
+async function loadLeads() {
+  document.getElementById('page-title').textContent = 'Leads';
+  document.getElementById('page-sub').textContent = 'Conference captures & inbound pipeline';
+  const leads = await api('/api/leads');
+  document.getElementById('leads-badge').textContent = leads.length;
+
+  let html = `<div style="margin-bottom:16px;display:flex;gap:10px;">
+    <button class="btn primary" onclick="openNewLead()">+ Capture Lead</button>
+  </div>`;
+
+  if(!leads.length) {
+    html += '<p style="color:var(--text-muted);padding:40px;text-align:center;">No leads captured yet. Hit + Capture Lead to get started.</p>';
+  } else {
+    html += '<div class="panel"><div class="panel-body" style="max-height:none;">';
+    leads.forEach(l => {
+      const interestIcon = l.interest==='Hot'?'🔥':l.interest==='Cool'?'❄️':'☀️';
+      const interestColor = l.interest==='Hot'?'var(--danger)':l.interest==='Cool'?'var(--accent)':'var(--warning)';
+      html += `<div style="padding:14px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:0.9rem;">${esc(l.name)}</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);">${l.title?esc(l.title)+' — ':''}${esc(l.organization)}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">
+            ${l.email?'📧 '+esc(l.email)+' ':''}${l.phone?'📞 '+esc(l.phone):''}
+          </div>
+          ${l.source?`<div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">📍 ${esc(l.source)}</div>`:''}
+          ${l.notes?`<div style="font-size:0.78rem;color:var(--text-dim);margin-top:6px;">${esc(l.notes)}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:0.75rem;padding:4px 10px;border-radius:8px;font-weight:600;color:${interestColor};background:${l.interest==='Hot'?'var(--danger-bg)':l.interest==='Cool'?'var(--accent-glow)':'var(--warning-bg)'};">${interestIcon} ${esc(l.interest)}</span>
+          <button class="btn" style="font-size:0.68rem;padding:5px 10px;" onclick="deleteLead(${l.id})">🗑️</button>
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+
+function openNewLead() { document.getElementById('leadModal').classList.add('show'); document.getElementById('leadName').focus(); }
+
+async function saveLead() {
+  const name = document.getElementById('leadName').value.trim();
+  const org = document.getElementById('leadOrg').value.trim();
+  if(!name || !org) return;
+  await api('/api/leads', { method:'POST', body:JSON.stringify({
+    name, title:document.getElementById('leadTitle').value,
+    organization:org, email:document.getElementById('leadEmail').value,
+    phone:document.getElementById('leadPhone').value,
+    interest:document.getElementById('leadInterest').value,
+    source:document.getElementById('leadSource').value,
+    notes:document.getElementById('leadNotes').value
+  })});
+  closeModal('leadModal');
+  ['leadName','leadTitle','leadOrg','leadEmail','leadPhone','leadSource','leadNotes'].forEach(id=>document.getElementById(id).value='');
+  loadLeads();
+}
+
+async function deleteLead(id) {
+  if(!confirm('Delete this lead?')) return;
+  await api('/api/leads/'+id, {method:'DELETE'});
+  loadLeads();
+}
+
+// ── Helpers ──
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function fmtDate(d) {
+  if(!d) return '';
+  const dt = new Date(d+'Z');
+  const now = new Date();
+  const diff = now - dt;
+  if(diff < 86400000) return 'Today';
+  if(diff < 172800000) return 'Yesterday';
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+// ── Init ──
+loadDashboard();
+api('/api/leads').then(l => document.getElementById('leads-badge').textContent = l.length);
+</script>
+</body>
+</html>
