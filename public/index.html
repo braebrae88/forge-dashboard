@@ -2356,7 +2356,7 @@ document.addEventListener('keydown', e => {
 </div>
 <div class="quick-panel-overlay" id="dealGuidanceOverlay" onclick="closeDealGuidance()"></div>
 
-<script src="/deal-guidance.js"></script>
+<script src="/deal-guidance.js?v=2"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
 // DEAL GUIDANCE PANEL UI
@@ -2366,7 +2366,13 @@ let currentGuidanceDealId = null;
 
 // Edit Deal - Opens prescriptive guidance panel (called from deal cards)
 async function editDeal(id) {
-  showDealGuidance(id);
+  console.log('editDeal called with id:', id);
+  try {
+    await showDealGuidance(id);
+  } catch(e) {
+    console.error('Error in showDealGuidance:', e);
+    alert('Error loading deal: ' + e.message);
+  }
 }
 
 async function showDealGuidance(dealId) {
