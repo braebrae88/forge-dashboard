@@ -488,6 +488,18 @@ app.get('/api/pipeline', (req, res) => {
   res.json(deals);
 });
 
+// Get single pipeline deal
+app.get('/api/pipeline/:id', (req, res) => {
+  const deal = db.prepare(`
+    SELECT p.*, c.name, c.organization, c.location 
+    FROM sales_pipeline p 
+    LEFT JOIN cio_targets c ON p.cio_target_id = c.id 
+    WHERE p.id = ?
+  `).get(req.params.id);
+  if (!deal) return res.status(404).json({ error: 'Deal not found' });
+  res.json(deal);
+});
+
 app.post('/api/pipeline', (req, res) => {
   const { cio_target_id, stage, metrics, economic_buyer, decision_criteria, decision_process, paper_process, identified_pain, champion, competition, deal_value, engagement_type, next_action, next_action_date, notes } = req.body;
   const result = db.prepare(`
