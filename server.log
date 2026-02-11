@@ -1,0 +1,12 @@
+FORGE Dashboard running on http://localhost:3456
+NotFoundError: Not Found
+    at createHttpError (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/send/index.js:861:12)
+    at SendStream.error (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/send/index.js:168:31)
+    at SendStream.pipe (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/send/index.js:468:14)
+    at sendfile (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/express/lib/response.js:1014:8)
+    at ServerResponse.sendFile (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/express/lib/response.js:411:3)
+    at /Users/admin/.openclaw/workspace/forge-dashboard/server.js:1224:7
+    at Layer.handleRequest (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/admin/.openclaw/workspace/forge-dashboard/node_modules/router/index.js:435:11)

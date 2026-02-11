@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none">
+  <!-- Flame -->
+  <path d="M8 52c0-8 4-16 8-22 2-3 4-7 4-11 0 6 4 10 6 14 1 2 2 5 2 8 0 8-6 14-14 14-2 0-4-1-6-3z" fill="#38bdf8"/>
+  <path d="M14 52c0-5 2-10 5-14 1-2 3-4 3-7 0 4 3 7 4 10 1 1 1 3 1 5 0 5-4 9-9 9-2 0-3 0-4-3z" fill="#22d3ee"/>
+  <!-- Text -->
+  <text x="48" y="30" font-family="'Inter','Helvetica Neue',sans-serif" font-weight="800" font-size="28" fill="#1e293b">FORGE</text>
+  <text x="48" y="54" font-family="'Inter','Helvetica Neue',sans-serif" font-weight="800" font-size="28" fill="#38bdf8">HEALTH</text>
+</svg>
