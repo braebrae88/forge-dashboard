@@ -2308,15 +2308,7 @@ document.addEventListener('keydown', e => {
         <button class="qp-status-btn" data-status="backlog" onclick="qpSetStatus('backlog')">💡 Ideas</button>
       </div>
     </div>
-    <div class="qp-field">
-      <label>Objective</label>
-      <textarea id="qpDescription" placeholder="What are we trying to accomplish?" style="min-height:50px;font-size:0.82rem;"></textarea>
-    </div>
-    <div class="qp-field" style="flex:1;">
-      <label>Notes <span style="color:var(--text-muted);font-weight:normal;">(updates, blockers, @Mira: requests)</span></label>
-      <textarea id="qpNotes" placeholder="Add notes, progress updates, blockers...&#10;&#10;Use @Mira: to request research or action" style="min-height:200px;flex:1;"></textarea>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
       <div class="qp-field" style="margin-bottom:0;">
         <label>Priority</label>
         <select id="qpPriority">
@@ -2330,6 +2322,14 @@ document.addEventListener('keydown', e => {
         <label>Due Date</label>
         <input type="date" id="qpDueDate">
       </div>
+    </div>
+    <div class="qp-field">
+      <label>Objective</label>
+      <textarea id="qpDescription" placeholder="What are we trying to accomplish? Paste links, details, context..." style="min-height:140px;font-size:0.82rem;"></textarea>
+    </div>
+    <div class="qp-field" style="flex:1;">
+      <label>Notes <span style="color:var(--text-muted);font-weight:normal;">(updates, blockers, @Mira: requests)</span></label>
+      <textarea id="qpNotes" placeholder="Add notes, progress updates, blockers...&#10;&#10;Use @Mira: to request research or action" style="min-height:160px;flex:1;"></textarea>
     </div>
     <div class="qp-field">
       <label>Tags</label>
