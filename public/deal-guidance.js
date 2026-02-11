@@ -148,6 +148,7 @@ function generateDealGuidance(deal) {
   const guidance = {
     urgentActions: [],
     warnings: [],
+    stageHealth: null, // NEW: Stage regression/advancement recommendations
     meddpiccStatus: {},
     meddpiccScore: 0,
     stageGuidance: CHALLENGER_STAGES[deal.stage] || CHALLENGER_STAGES.outreach,
@@ -244,6 +245,84 @@ function generateDealGuidance(deal) {
       });
     }
   }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // STAGE HEALTH - Intelligent regression/advancement recommendations
+  // ═══════════════════════════════════════════════════════════════════
+  
+  const stageOrder = ['outreach', 'teach', 'qualify', 'expand', 'propose', 'close', 'won'];
+  const currentStageIndex = stageOrder.indexOf(stage);
+  
+  // Check for stage regression indicators
+  let regressionSuggestion = null;
+  
+  // In Expand or later but no Champion — regress to Qualify
+  if (currentStageIndex >= 3 && !deal.champion) { // expand = index 3
+    regressionSuggestion = {
+      severity: 'critical',
+      suggestedStage: 'qualify',
+      reason: 'No Champion identified',
+      explanation: 'You cannot expand without someone selling for you internally. Deal should regress to Qualify until you develop a champion.',
+      currentStage: stage
+    };
+  }
+  
+  // In Qualify or later but no Economic Buyer — regress to Teach
+  if (currentStageIndex >= 2 && !deal.economic_buyer && !regressionSuggestion) { // qualify = index 2
+    regressionSuggestion = {
+      severity: 'high',
+      suggestedStage: 'teach',
+      reason: 'No Economic Buyer identified',
+      explanation: 'Without knowing who controls the budget, you are not qualified. Regress to Teach and ask: "Who ultimately approves this spend?"',
+      currentStage: stage
+    };
+  }
+  
+  // In Propose or later but no Decision Criteria — regress to Qualify
+  if (currentStageIndex >= 4 && !deal.decision_criteria && !regressionSuggestion) { // propose = index 4
+    regressionSuggestion = {
+      severity: 'high',
+      suggestedStage: 'qualify',
+      reason: 'Decision Criteria unknown',
+      explanation: 'You cannot propose without knowing how they will evaluate. Regress to Qualify and map their criteria.',
+      currentStage: stage
+    };
+  }
+  
+  // In Close but no Paper Process — regress to Propose
+  if (currentStageIndex >= 5 && !deal.paper_process && !regressionSuggestion) { // close = index 5
+    regressionSuggestion = {
+      severity: 'medium',
+      suggestedStage: 'propose',
+      reason: 'Paper Process not mapped',
+      explanation: 'You cannot close without knowing the procurement path. Regress to Propose and map every step to signature.',
+      currentStage: stage
+    };
+  }
+  
+  // Stale deal check — if no activity in 30+ days, suggest review
+  if (daysSinceUpdate > 30 && !regressionSuggestion) {
+    regressionSuggestion = {
+      severity: 'critical',
+      suggestedStage: null, // Review, not necessarily regress
+      reason: `Deal cold — ${daysSinceUpdate} days since activity`,
+      explanation: 'This deal has gone cold. Either restart engagement or consider disqualifying. Do not leave it sitting in the pipeline.',
+      currentStage: stage
+    };
+  }
+  
+  // In advanced stages but MEDDPICC score too low — suggest regression
+  if (currentStageIndex >= 3 && guidance.meddpiccScore < 40 && !regressionSuggestion) {
+    regressionSuggestion = {
+      severity: 'high',
+      suggestedStage: 'qualify',
+      reason: `MEDDPICC only ${guidance.meddpiccScore}% complete for ${stage} stage`,
+      explanation: 'You are too far ahead without the foundation. Regress to Qualify and fill in the gaps before advancing.',
+      currentStage: stage
+    };
+  }
+  
+  guidance.stageHealth = regressionSuggestion;
   
   // Determine Next Best Action
   if (guidance.warnings.find(w => w.severity === 'critical')) {

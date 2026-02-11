@@ -2409,6 +2409,30 @@ async function showDealGuidance(dealId) {
     html += '</div>';
   }
   
+  // Stage Health - Regression recommendation
+  if (guidance.stageHealth) {
+    const sh = guidance.stageHealth;
+    const bgColor = sh.severity === 'critical' ? 'rgba(239,68,68,0.15)' : sh.severity === 'high' ? 'rgba(245,158,11,0.15)' : 'rgba(100,116,139,0.15)';
+    const borderColor = sh.severity === 'critical' ? '#ef4444' : sh.severity === 'high' ? '#f59e0b' : '#64748b';
+    const icon = sh.suggestedStage ? '⬅️' : '🔍';
+    
+    html += '<div style="background:'+bgColor+';border:1px solid '+borderColor+';border-radius:12px;padding:16px;margin-bottom:20px;">';
+    html += '<div style="font-size:0.7rem;color:'+borderColor+';font-weight:600;margin-bottom:6px;">'+icon+' STAGE HEALTH CHECK</div>';
+    html += '<div style="font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:4px;">'+esc(sh.reason)+'</div>';
+    if (sh.suggestedStage) {
+      html += '<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;">'+esc(sh.explanation)+'</div>';
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg-card);border-radius:8px;">';
+      html += '<span style="font-size:0.8rem;color:var(--text-muted);">Current: <strong style="color:var(--text);">'+esc(sh.currentStage)+'</strong></span>';
+      html += '<span style="color:var(--danger);">→</span>';
+      html += '<span style="font-size:0.8rem;color:var(--text-muted);">Suggested: <strong style="color:'+borderColor+';">'+esc(sh.suggestedStage)+'</strong></span>';
+      html += '<button onclick="regressDeal('+dealId+',\''+sh.suggestedStage+'\')" style="margin-left:auto;background:'+borderColor+';color:white;border:none;padding:6px 12px;border-radius:6px;font-size:0.75rem;cursor:pointer;font-weight:600;">Move to '+esc(sh.suggestedStage)+'</button>';
+      html += '</div>';
+    } else {
+      html += '<div style="font-size:0.85rem;color:var(--text-dim);">'+esc(sh.explanation)+'</div>';
+    }
+    html += '</div>';
+  }
+  
   // Warnings
   if (guidance.warnings.length) {
     html += '<div style="margin-bottom:20px;">';
@@ -2501,6 +2525,27 @@ function toggleMeddpiccDetail(el) {
   const detail = el.querySelector('.meddpicc-detail');
   if (detail) {
     detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Regress deal to earlier stage
+async function regressDeal(dealId, newStage) {
+  if (!confirm('Move this deal back to ' + newStage + ' stage? This acknowledges the deal needs more work before advancing.')) {
+    return;
+  }
+  try {
+    await api('/api/pipeline/' + dealId, { 
+      method: 'PUT', 
+      body: JSON.stringify({ stage: newStage })
+    });
+    // Refresh the guidance panel
+    showDealGuidance(dealId);
+    // Also refresh pipeline view if open
+    if (typeof loadSalesPipeline === 'function') {
+      loadSalesPipeline();
+    }
+  } catch(e) {
+    alert('Error updating deal: ' + e.message);
   }
 }
 
