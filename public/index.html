@@ -340,6 +340,7 @@ function showPage(page, el) {
   else if(page==='leads') loadLeads();
   else if(page==='notes') loadNotes();
   else if(page==='archived') loadArchived();
+  else if(page==='linkedin') loadLinkedIn();
   else { document.getElementById('page-title').textContent=page; document.getElementById('content').innerHTML='<p style="color:var(--text-muted);padding:40px;">Coming soon...</p>'; }
 }
 
@@ -1346,6 +1347,133 @@ async function loadArchived() {
         </div>
       `).join('')}
       ${!archivedTasks.length ? '<p style="color:var(--text-muted);text-align:center;padding:40px;">No completed tasks yet. Tasks marked as Done will appear here.</p>' : ''}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LINKEDIN CONTENT STRATEGY
+// ═══════════════════════════════════════════════════════════════════
+async function loadLinkedIn() {
+  document.getElementById('page-title').textContent = 'LinkedIn Strategy';
+  document.getElementById('page-sub').textContent = 'Slow-burn thought leadership to introduce LUMEN';
+  
+  const phases = [
+    {
+      phase: 1, title: 'Establish Credibility', weeks: '1-4',
+      goal: 'Position Sean as the healthcare AI strategy voice. NO product mentions.',
+      themes: [
+        { topic: 'Pilot Purgatory', hook: 'The dirty secret no one talks about: your AI pilot was never designed to succeed.' },
+        { topic: 'Governance Gaps', hook: 'Your hospital approved an AI tool last month. Do you know who is accountable if it fails?' },
+        { topic: 'CIO Pain Points', hook: 'I talked to 30 CIOs this year. They all say the same thing about AI.' },
+        { topic: 'Big 4 Reality', hook: 'You hired a Big 4 firm for AI strategy. Here is what they did not tell you.' }
+      ]
+    },
+    {
+      phase: 2, title: 'Introduce Framework Thinking', weeks: '5-8',
+      goal: 'Shift conversation to HOW to evaluate AI decisions. Plant seeds for LUMEN.',
+      themes: [
+        { topic: 'Decision Intelligence', hook: 'Everyone talks about AI governance. No one shows you what it looks like in practice.' },
+        { topic: 'Evaluation Criteria', hook: 'Before you fund that AI pilot, ask these 4 questions.' },
+        { topic: 'Speed vs Safety', hook: 'You can move fast AND be safe. Here is how.' },
+        { topic: 'CHAI Standards', hook: 'If you are not aligned to CHAI standards yet, you will be. Here is why.' }
+      ]
+    },
+    {
+      phase: 3, title: 'Soft LUMEN Introduction', weeks: '9-12',
+      goal: 'Reveal LUMEN as the natural solution to problems established in Phase 1-2.',
+      themes: [
+        { topic: 'Building the Solution', hook: 'After 20 years in healthcare tech, I finally built what I wished existed.' },
+        { topic: 'Decision Record', hook: 'When regulators ask why you deployed that AI, what will you show them?' },
+        { topic: 'Activation Bridge', hook: 'We took a hospital from stuck pilot to production in 6 weeks. Here is the playbook.' },
+        { topic: 'LUMEN in Action', hook: 'A CIO told me last week: This should not have been this easy. He was right.' }
+      ]
+    }
+  ];
+
+  document.getElementById('content').innerHTML = `
+    <div class="stats-row" style="margin-bottom:20px;">
+      <div class="stat-card"><div class="stat-label">Strategy</div><div class="stat-value" style="color:var(--accent);font-size:1.3rem;">12 wk</div><div class="stat-sub">Slow-burn to LUMEN</div></div>
+      <div class="stat-card"><div class="stat-label">Current Phase</div><div class="stat-value" style="color:var(--success);font-size:1.3rem;">1</div><div class="stat-sub">Establish Credibility</div></div>
+      <div class="stat-card"><div class="stat-label">Frequency</div><div class="stat-value" style="color:var(--warning);font-size:1.3rem;">2x</div><div class="stat-sub">Posts per week</div></div>
+      <div class="stat-card"><div class="stat-label">Goal</div><div class="stat-value" style="color:var(--purple);font-size:1.3rem;">CIO</div><div class="stat-sub">Thought leader status</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+      <div>
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-header"><h3>📈 12-Week Content Roadmap</h3></div>
+          <div class="panel-body" style="max-height:none;">
+            ${phases.map(p => `
+              <div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                  <span style="background:${p.phase===1?'var(--success)':p.phase===2?'var(--warning)':'var(--accent)'};color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;">Phase ${p.phase}: Weeks ${p.weeks}</span>
+                </div>
+                <h4 style="font-size:1rem;font-weight:600;margin-bottom:6px;">${esc(p.title)}</h4>
+                <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px;">${esc(p.goal)}</p>
+                <div style="display:grid;gap:8px;">
+                  ${p.themes.map(t => `
+                    <div style="background:var(--bg-surface);padding:12px;border-radius:8px;border-left:3px solid ${p.phase===1?'var(--success)':p.phase===2?'var(--warning)':'var(--accent)'};">
+                      <div style="font-size:0.82rem;font-weight:500;margin-bottom:4px;">${esc(t.topic)}</div>
+                      <div style="font-size:0.75rem;color:var(--accent);font-style:italic;">"${esc(t.hook)}"</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-header"><h3>🎯 This Week's Post</h3></div>
+          <div class="panel-body">
+            <div style="padding:12px;background:var(--bg-surface);border-radius:8px;border-left:3px solid var(--success);">
+              <div style="font-size:0.82rem;font-weight:600;margin-bottom:8px;">The Pilot Purgatory Problem</div>
+              <div style="font-size:0.75rem;color:var(--text-dim);white-space:pre-wrap;line-height:1.5;">Here's a number that should terrify healthcare CIOs: 80%.
+
+That's how many AI pilots in healthcare never make it to production.
+
+I've seen it dozens of times:
+→ Exciting vendor demo
+→ Board approves pilot budget  
+→ 6 months of "promising results"
+→ ... silence
+
+The pilot becomes a zombie — not dead, but not alive.
+
+Why does this keep happening?
+
+1️⃣ No clear success criteria before launch
+2️⃣ No governance framework for production readiness
+3️⃣ No accountability for the go/no-go decision
+
+The fix isn't more pilots. It's better decision-making about WHICH pilots deserve production investment.
+
+What's your organization's pilot-to-production ratio?
+
+#HealthcareAI #DigitalHealth</div>
+              <div style="margin-top:12px;display:flex;gap:8px;">
+                <button class="btn primary" style="font-size:0.75rem;" onclick="navigator.clipboard.writeText(document.querySelector('.panel-body pre, .panel-body div[style*=pre-wrap]').textContent);alert('Copied!')">📋 Copy Post</button>
+                <button class="btn" style="font-size:0.75rem;" onclick="window.open('https://www.linkedin.com/company/forge-health-ai/','_blank')">Open LinkedIn</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="panel">
+          <div class="panel-header"><h3>💡 Content Principles</h3></div>
+          <div class="panel-body">
+            <div style="font-size:0.8rem;line-height:1.6;">
+              <p style="margin-bottom:10px;"><strong style="color:var(--danger);">Never lead with product.</strong> Lead with the problem. LUMEN is discovered, not pitched.</p>
+              <p style="margin-bottom:10px;"><strong style="color:var(--warning);">Contrarian > Consensus.</strong> Challenge the Big 4. Call out pilot purgatory. Be memorable.</p>
+              <p style="margin-bottom:10px;"><strong style="color:var(--success);">Teach, don't sell.</strong> Every post leaves them smarter. Sales happen in DMs.</p>
+              <p><strong style="color:var(--purple);">Consistency > Virality.</strong> 2 posts/week for 12 weeks beats 1 viral post.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
