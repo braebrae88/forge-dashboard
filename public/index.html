@@ -580,9 +580,7 @@ function openNewDeal() {
   showDealModal();
 }
 
-function editDeal(id) {
-  showDealModal(id);
-}
+// editDeal is defined later - calls showDealGuidance for prescriptive coaching
 
 async function showDealModal(dealId = null) {
   const [cios, deal] = await Promise.all([
@@ -853,10 +851,7 @@ async function saveDeal() {
   loadSalesPipeline();
 }
 
-// Edit Deal - Opens prescriptive guidance panel
-async function editDeal(id) {
-  showDealGuidance(id);
-}
+// editDeal function is defined in the deal guidance script section below
 
 async function updateDeal(id) {
   const body = {
@@ -2368,6 +2363,11 @@ document.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════════════════════════════
 
 let currentGuidanceDealId = null;
+
+// Edit Deal - Opens prescriptive guidance panel (called from deal cards)
+async function editDeal(id) {
+  showDealGuidance(id);
+}
 
 async function showDealGuidance(dealId) {
   currentGuidanceDealId = dealId;
