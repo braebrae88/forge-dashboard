@@ -853,65 +853,9 @@ async function saveDeal() {
   loadSalesPipeline();
 }
 
-// Edit Deal (MEDDPICC modal)
+// Edit Deal - Opens prescriptive guidance panel
 async function editDeal(id) {
-  const deals = await api('/api/pipeline');
-  const d = deals.find(x => x.id === id);
-  if(!d) return;
-  const modal = document.createElement('div');
-  modal.className = 'modal show';
-  modal.id = 'editDealModal';
-  modal.innerHTML = `
-    <div class="modal-content" style="max-width:600px;max-height:85vh;overflow-y:auto">
-      <h3 style="margin:0 0 4px">${esc(d.organization || 'Deal #'+d.id)}</h3>
-      <p style="color:var(--text-muted);margin:0 0 16px;font-size:0.8rem">${esc(d.name && d.name!=='TBD' ? d.name + ' · ' : '')}${esc(d.engagement_type)} · Stage: ${d.stage}</p>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div>
-          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Stage</label>
-          <select id="ed_stage" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary)">
-            ${['outreach','teach','qualify','expand','propose','close','won','lost'].map(s=>`<option value="${s}" ${d.stage===s?'selected':''}>${s}</option>`).join('')}
-          </select>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Deal Value ($)</label>
-          <input id="ed_value" type="number" value="${d.deal_value||0}" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary)">
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Next Action</label>
-          <input id="ed_action" type="text" value="${esc(d.next_action||'')}" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary)">
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Action Date</label>
-          <input id="ed_action_date" type="date" value="${d.next_action_date||''}" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary)">
-        </div>
-      </div>
-
-      <h4 style="color:var(--accent);margin:16px 0 8px;font-size:0.85rem">📊 MEDDPICC</h4>
-      <div style="display:grid;gap:10px">
-        ${[
-          ['metrics','M — Metrics','What measurable outcomes matter?',d.metrics],
-          ['economic_buyer','E — Economic Buyer','Who signs the check?',d.economic_buyer],
-          ['decision_criteria','D — Decision Criteria','How will they evaluate?',d.decision_criteria],
-          ['decision_process','D — Decision Process','How do they actually buy?',d.decision_process],
-          ['paper_process','P — Paper Process','Procurement, legal, contracts?',d.paper_process],
-          ['identified_pain','I — Identified Pain','What specific pain are we solving?',d.identified_pain],
-          ['champion','C — Champion','Who sells this internally?',d.champion],
-          ['competition','C — Competition','Who else could they hire?',d.competition],
-        ].map(([key,label,hint,val]) => `
-          <div>
-            <label style="font-size:0.75rem;color:var(--accent);display:block;margin-bottom:2px;font-weight:600">${label}</label>
-            <textarea id="ed_${key}" placeholder="${hint}" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);min-height:48px;resize:vertical;font-size:0.8rem">${esc(val||'')}</textarea>
-          </div>`).join('')}
-      </div>
-
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-        <button class="btn" style="color:#ef4444" onclick="deleteDeal(${d.id})">Delete</button>
-        <button class="btn" onclick="this.closest('.modal').remove()">Cancel</button>
-        <button class="btn primary" onclick="updateDeal(${d.id})">Save</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
+  showDealGuidance(id);
 }
 
 async function updateDeal(id) {
