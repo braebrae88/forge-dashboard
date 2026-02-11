@@ -195,23 +195,23 @@
       <span>Command Center</span>
     </div>
     <div class="sidebar-nav">
-      <div class="nav-section">Overview</div>
+      <div class="nav-section">Focus</div>
       <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">🚀</span> Activation Bridge</div>
-      <div class="nav-item" onclick="showPage('pipeline',this)"><span class="icon">🎯</span> CIO Pipeline <span class="nav-badge" id="cio-badge">0</span></div>
+      <div class="nav-item" onclick="showPage('briefing',this)"><span class="icon">📰</span> Daily Briefing</div>
       <div class="nav-section">Sales</div>
       <div class="nav-item" onclick="showPage('sales_pipeline',this)"><span class="icon">💰</span> Pipeline <span class="nav-badge" id="pipeline-badge">0</span></div>
+      <div class="nav-item" onclick="showPage('pipeline',this)"><span class="icon">🎯</span> CIO Targets <span class="nav-badge" id="cio-badge">0</span></div>
       <div class="nav-item" onclick="showPage('leads',this)"><span class="icon">🔥</span> Leads <span class="nav-badge" id="leads-badge">0</span></div>
       <div class="nav-section">Marketing</div>
       <div class="nav-item" onclick="showPage('linkedin',this)"><span class="icon">💼</span> LinkedIn</div>
       <div class="nav-item" onclick="showPage('content',this)"><span class="icon">✍️</span> Content</div>
       <div class="nav-item" onclick="showPage('conferences',this)"><span class="icon">🎤</span> Conferences</div>
+      <div class="nav-section">Workspace</div>
+      <div class="nav-item" onclick="showPage('notes',this)"><span class="icon">📝</span> Notes</div>
+      <div class="nav-item" onclick="showPage('archived',this)"><span class="icon">📦</span> Archived</div>
       <div class="nav-section">Development</div>
       <div class="nav-item" onclick="showPage('lumen',this)"><span class="icon">💡</span> Lumen App</div>
       <div class="nav-item" onclick="showPage('sdk',this)"><span class="icon">🔧</span> Lumen SDK</div>
-      <div class="nav-section">Operations</div>
-      <div class="nav-item" onclick="showPage('briefing',this)"><span class="icon">📰</span> Daily Briefing</div>
-      <div class="nav-item" onclick="showPage('notes',this)"><span class="icon">📝</span> Notes</div>
-      <div class="nav-item" onclick="showPage('archived',this)"><span class="icon">📦</span> Archived</div>
     </div>
     <div class="sidebar-chat">
       <div class="sidebar-chat-header">
@@ -2403,5 +2403,162 @@ document.addEventListener('keydown', e => {
   </div>
 </div>
 
+<!-- Deal Guidance Panel -->
+<div class="quick-panel" id="dealGuidancePanel">
+  <div class="quick-panel-header">
+    <h3>💼 <span id="dgpOrg">Deal</span></h3>
+    <button class="quick-panel-close" onclick="closeDealGuidance()">×</button>
+  </div>
+  <div class="quick-panel-body" id="dgpBody"></div>
+  <div class="quick-panel-footer">
+    <button class="btn" onclick="closeDealGuidance()">Close</button>
+    <button class="btn primary" onclick="editDealFromGuidance()">Edit Deal Details</button>
+  </div>
+</div>
+<div class="quick-panel-overlay" id="dealGuidanceOverlay" onclick="closeDealGuidance()"></div>
+
+<script src="/deal-guidance.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// DEAL GUIDANCE PANEL UI
+// ═══════════════════════════════════════════════════════════════════
+
+let currentGuidanceDealId = null;
+
+async function showDealGuidance(dealId) {
+  currentGuidanceDealId = dealId;
+  const deal = await api('/api/pipeline/' + dealId);
+  const guidance = generateDealGuidance(deal);
+  
+  document.getElementById('dgpOrg').textContent = deal.organization || 'Deal';
+  
+  const stageIndex = ['outreach','teach','qualify','expand','propose','close','won'].indexOf(deal.stage);
+  const stageLabels = ['Outreach','Teach','Qualify','Expand','Propose','Close','Won'];
+  
+  let html = '';
+  
+  // Stage Progress Bar
+  html += '<div style="margin-bottom:20px;">';
+  html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">CHALLENGER STAGE</div>';
+  html += '<div style="display:flex;gap:4px;">';
+  stageLabels.forEach((s, i) => {
+    const isActive = i === stageIndex;
+    const isPast = i < stageIndex;
+    const bg = isActive ? 'var(--accent)' : isPast ? 'var(--success)' : 'var(--bg-surface)';
+    const color = isActive || isPast ? 'white' : 'var(--text-muted)';
+    html += '<div style="flex:1;padding:8px 4px;background:'+bg+';color:'+color+';text-align:center;font-size:0.65rem;font-weight:600;border-radius:4px;">'+s+'</div>';
+  });
+  html += '</div></div>';
+  
+  // Next Best Action (prominent)
+  if (guidance.nextBestAction) {
+    html += '<div style="background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.15));border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:20px;">';
+    html += '<div style="font-size:0.7rem;color:var(--accent);font-weight:600;margin-bottom:6px;">🎯 NEXT BEST ACTION</div>';
+    html += '<div style="font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:4px;">'+esc(guidance.nextBestAction.message)+'</div>';
+    html += '<div style="font-size:0.85rem;color:var(--text-dim);">'+esc(guidance.nextBestAction.action)+'</div>';
+    html += '</div>';
+  }
+  
+  // Warnings
+  if (guidance.warnings.length) {
+    html += '<div style="margin-bottom:20px;">';
+    html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">⚠️ ATTENTION REQUIRED</div>';
+    guidance.warnings.forEach(w => {
+      const borderColor = w.severity === 'critical' ? 'var(--danger)' : w.severity === 'high' ? 'var(--warning)' : 'var(--text-muted)';
+      html += '<div style="border-left:3px solid '+borderColor+';padding:10px 12px;margin-bottom:8px;background:var(--bg-surface);border-radius:0 8px 8px 0;">';
+      html += '<div style="font-size:0.8rem;font-weight:500;color:var(--text);">'+esc(w.message)+'</div>';
+      html += '<div style="font-size:0.75rem;color:var(--text-dim);margin-top:4px;">→ '+esc(w.action)+'</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  
+  // MEDDPICC Scorecard
+  html += '<div style="margin-bottom:20px;">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+  html += '<div style="font-size:0.75rem;color:var(--text-muted);">MEDDPICC SCORECARD</div>';
+  const scoreColor = guidance.meddpiccScore >= 70 ? 'var(--success)' : guidance.meddpiccScore >= 40 ? 'var(--warning)' : 'var(--danger)';
+  html += '<div style="font-size:0.85rem;font-weight:700;color:'+scoreColor+';">'+guidance.meddpiccScore+'%</div>';
+  html += '</div>';
+  
+  Object.keys(MEDDPICC).forEach(field => {
+    const status = guidance.meddpiccStatus[field];
+    const icon = status.filled ? '✅' : '⬜';
+    const color = status.filled ? 'var(--text)' : 'var(--text-muted)';
+    html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="toggleMeddpiccDetail(this)">';
+    html += '<span style="font-size:0.9rem;">'+icon+'</span>';
+    html += '<div style="flex:1;">';
+    html += '<div style="font-size:0.8rem;font-weight:500;color:'+color+';"><span style="color:var(--accent);font-weight:700;">'+status.letter+'</span> '+status.label+'</div>';
+    if (status.filled) {
+      html += '<div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px;">'+esc(status.value.substring(0,80))+(status.value.length>80?'...':'')+'</div>';
+    }
+    html += '<div class="meddpicc-detail" style="display:none;margin-top:8px;padding:10px;background:var(--bg-card);border-radius:8px;font-size:0.75rem;">';
+    html += '<div style="color:var(--accent);margin-bottom:4px;">'+esc(status.question)+'</div>';
+    html += '<div style="color:var(--text-muted);margin-bottom:4px;font-style:italic;">Examples: '+esc(status.examples)+'</div>';
+    html += '<div style="color:var(--text-dim);">💡 '+esc(status.coaching)+'</div>';
+    html += '</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  
+  // Stage Guidance
+  html += '<div style="margin-bottom:20px;">';
+  html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">📋 STAGE PLAYBOOK: '+guidance.stageGuidance.label.toUpperCase()+'</div>';
+  html += '<div style="font-size:0.8rem;color:var(--accent);margin-bottom:10px;font-weight:500;">Objective: '+esc(guidance.stageGuidance.objective)+'</div>';
+  guidance.stageGuidance.actions.forEach((action, i) => {
+    html += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
+    html += '<span style="color:var(--text-muted);font-size:0.75rem;">'+(i+1)+'.</span>';
+    html += '<span style="font-size:0.8rem;color:var(--text-dim);">'+esc(action)+'</span>';
+    html += '</div>';
+  });
+  html += '<div style="margin-top:12px;padding:10px;background:var(--bg-surface);border-radius:8px;">';
+  html += '<div style="font-size:0.7rem;color:var(--success);font-weight:600;">TO ADVANCE →</div>';
+  html += '<div style="font-size:0.8rem;color:var(--text-dim);">'+esc(guidance.stageGuidance.nextStageRequires)+'</div>';
+  html += '</div>';
+  html += '</div>';
+  
+  // Deal Info
+  html += '<div style="border-top:1px solid var(--border);padding-top:16px;">';
+  html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">DEAL INFO</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.8rem;">';
+  html += '<div><span style="color:var(--text-muted);">Value:</span> <strong>$'+(deal.deal_value||0).toLocaleString()+'</strong></div>';
+  html += '<div><span style="color:var(--text-muted);">Type:</span> '+esc(deal.engagement_type||'N/A')+'</div>';
+  html += '<div><span style="color:var(--text-muted);">Days in Stage:</span> '+esc(deal.days_in_stage||'?')+'</div>';
+  html += '<div><span style="color:var(--text-muted);">Next Action:</span> '+(deal.next_action_date||'Not set')+'</div>';
+  html += '</div>';
+  if (deal.notes) {
+    html += '<div style="margin-top:12px;padding:10px;background:var(--bg-surface);border-radius:8px;font-size:0.75rem;color:var(--text-dim);white-space:pre-wrap;">'+esc(deal.notes)+'</div>';
+  }
+  html += '</div>';
+  
+  document.getElementById('dgpBody').innerHTML = html;
+  document.getElementById('dealGuidancePanel').classList.add('open');
+  document.getElementById('dealGuidanceOverlay').classList.add('open');
+}
+
+function closeDealGuidance() {
+  document.getElementById('dealGuidancePanel').classList.remove('open');
+  document.getElementById('dealGuidanceOverlay').classList.remove('open');
+  currentGuidanceDealId = null;
+}
+
+function editDealFromGuidance() {
+  closeDealGuidance();
+  if (currentGuidanceDealId) showDealModal(currentGuidanceDealId);
+}
+
+function toggleMeddpiccDetail(el) {
+  const detail = el.querySelector('.meddpicc-detail');
+  if (detail) {
+    detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Override editDeal to show guidance panel instead of modal
+const originalEditDeal = typeof editDeal === 'function' ? editDeal : null;
+editDeal = function(id) {
+  showDealGuidance(id);
+};
+</script>
 </body>
 </html>
